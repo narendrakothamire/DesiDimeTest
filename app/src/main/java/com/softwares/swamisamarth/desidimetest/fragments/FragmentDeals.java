@@ -24,6 +24,7 @@ import com.softwares.swamisamarth.desidimetest.applications.DesiDimeTestApplicat
 import com.softwares.swamisamarth.desidimetest.constants.Constants;
 import com.softwares.swamisamarth.desidimetest.custom.EndlessRecyclerView;
 import com.softwares.swamisamarth.desidimetest.custom.PaginationRecyclerView;
+import com.softwares.swamisamarth.desidimetest.utilities.Utility;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -106,8 +107,8 @@ public class FragmentDeals extends Fragment {
 
         if(getArguments().get(Constants.ARGS_DEALS_CAT).equals("TOP")){
             URL = "http://rails4.desidime.com/v1/deals/top.json";
-        }else if(getArguments().get(Constants.ARGS_DEALS_CAT).equals("POPULOR")){
-            URL = "http://rails4.desidime.com/v1/deals/populor.json";
+        }else if(getArguments().get(Constants.ARGS_DEALS_CAT).equals("POPULAR")){
+            URL = "http://rails4.desidime.com/v1/deals/popular.json";
         }else if(getArguments().get(Constants.ARGS_DEALS_CAT).equals("FEATURED")){
             URL = "http://rails4.desidime.com/v1/deals/featured.json";
         }
@@ -123,22 +124,18 @@ public class FragmentDeals extends Fragment {
     }
 
     private void getDeals(String url) {
-        JSONObject jsonObject = new JSONObject();
-        try {
-            jsonObject.put("per_page", 10);
-            Log.d("PAGE", currentPage+"");
-            jsonObject.put("page", currentPage);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
 
         HashMap<String, String> params = new HashMap<>();
         params.put("per_page", String.valueOf(10));
         params.put("page", String.valueOf(currentPage));
-        VolleyRequest volleyRequest = new VolleyRequest(Request.Method.GET, URL, params,  null, successListener, errorListener);
+
+        String tempURL = Utility.changeURLForGetRequest(url, params);
+
+        VolleyRequest volleyRequest = new VolleyRequest(Request.Method.GET, tempURL, null, successListener, errorListener);
 
         DesiDimeTestApplication.getInstance().addToRequestQueue(volleyRequest);
     }
+
 
     private Response.Listener<JSONArray> successListener = new Response.Listener<JSONArray>() {
         @Override
@@ -150,9 +147,10 @@ public class FragmentDeals extends Fragment {
                     Deal deal = gson.fromJson(response.get(i).toString(), Deal.class);
                     tempDeals.add(deal);
                 }
-                currentPage++;
+
                 Log.d("Narendra", response.toString());
                 if(fromLoadMore){
+
                     int size = deals.size();
                     deals.remove(size - 1);//removes footer
                     deals.addAll(tempDeals);
@@ -162,7 +160,7 @@ public class FragmentDeals extends Fragment {
                     deals.addAll(tempDeals);
                     adapter.notifyDataSetChanged();
                 }
-
+                currentPage++;
             } catch (JSONException e) {
                 e.printStackTrace();
             }
