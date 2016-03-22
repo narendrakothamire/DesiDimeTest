@@ -21,9 +21,11 @@ public class VolleyRequest extends JsonArrayRequest {
     private static final int DEFAULT_MAX_RETRIES = 0;
     private static final float DEFAULT_BACKOFF_MULT = 1f;
     private static final int DEFAULT_TIME_OUT = (int) TimeUnit.SECONDS.toMillis(20);
+    private HashMap<String, String> params;
 
-    public VolleyRequest(int method, String url, JSONObject requestBody, Response.Listener<JSONArray> listener, Response.ErrorListener errorListener) {
+    public VolleyRequest(int method, String url, HashMap<String, String> params, JSONObject requestBody, Response.Listener<JSONArray> listener, Response.ErrorListener errorListener) {
         super(method, url, requestBody, listener, errorListener);
+        this.params = params;
         setRetryPolicy(new DefaultRetryPolicy(this.DEFAULT_TIME_OUT, this.DEFAULT_MAX_RETRIES, this.DEFAULT_BACKOFF_MULT));
     }
 
@@ -36,5 +38,11 @@ public class VolleyRequest extends JsonArrayRequest {
         return headers;
     }
 
-
+    @Override
+    protected Map<String, String> getParams() throws AuthFailureError {
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("per_page", String.valueOf(10));
+        params.put("page", String.valueOf(2));
+        return params;
+    }
 }

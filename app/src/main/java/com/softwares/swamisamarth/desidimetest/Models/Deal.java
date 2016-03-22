@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName;
 /**
  * Created by Narendra on 3/20/2016.
  */
-public class Deal {
+public class Deal extends Item {
 
     @SerializedName("title")
     private String title;

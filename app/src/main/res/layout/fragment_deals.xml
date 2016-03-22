@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     tools:context="com.softwares.swamisamarth.desidimetest.fragments.FragmentDeals">
 
-    <android.support.v7.widget.RecyclerView
+    <com.softwares.swamisamarth.desidimetest.custom.EndlessRecyclerView
         android:id="@+id/recyclerView"
         android:paddingTop="10dp"
         android:layout_width="match_parent"

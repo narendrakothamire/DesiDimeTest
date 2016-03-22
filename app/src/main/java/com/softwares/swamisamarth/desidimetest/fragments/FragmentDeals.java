@@ -15,17 +15,22 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.google.gson.Gson;
 import com.softwares.swamisamarth.desidimetest.Models.Deal;
+import com.softwares.swamisamarth.desidimetest.Models.Footer;
+import com.softwares.swamisamarth.desidimetest.Models.Item;
 import com.softwares.swamisamarth.desidimetest.Network.VolleyRequest;
 import com.softwares.swamisamarth.desidimetest.R;
 import com.softwares.swamisamarth.desidimetest.adapters.AdapterDeals;
 import com.softwares.swamisamarth.desidimetest.applications.DesiDimeTestApplication;
 import com.softwares.swamisamarth.desidimetest.constants.Constants;
+import com.softwares.swamisamarth.desidimetest.custom.EndlessRecyclerView;
+import com.softwares.swamisamarth.desidimetest.custom.PaginationRecyclerView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -34,11 +39,14 @@ public class FragmentDeals extends Fragment {
 
 
     private static final String TAG = FragmentDeals.class.getSimpleName();
-    private RecyclerView recyclerView;
+    private EndlessRecyclerView recyclerView;
     private AdapterDeals adapter;
-    private ArrayList<Deal> deals = new ArrayList<>();
-    private String URL = "http://rails4.desidime.com/v1/deals/featured.json";
+    private ArrayList<Item> deals = new ArrayList<>();
+    private String URL = "http://rails4.desidime.com/v1/deals/top.json";
     private int currentPage = 1;
+    private boolean hasMore;
+    private boolean fromLoadMore;
+    private LinearLayoutManager linearLayoutManager;
 
     public FragmentDeals() {
         // Required empty public constructor
@@ -50,9 +58,10 @@ public class FragmentDeals extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_deals, container, false);
 
-        recyclerView = (RecyclerView)view.findViewById(R.id.recyclerView);
+        recyclerView = (EndlessRecyclerView)view.findViewById(R.id.recyclerView);
         recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        linearLayoutManager = new LinearLayoutManager(getActivity());
+        recyclerView.setLayoutManager(linearLayoutManager);
 
         adapter = new AdapterDeals(getActivity(), deals);
         recyclerView.setAdapter(adapter);
@@ -66,32 +75,94 @@ public class FragmentDeals extends Fragment {
             }
         });
 
-        if(getArguments().get(Constants.ARGS_DEALS_CAT).equals("TOP")){
-            JSONObject jsonObject = new JSONObject();
-            try {
-                jsonObject.put("per_page", 10);
-                jsonObject.put("page", currentPage);
-            } catch (JSONException e) {
-                e.printStackTrace();
+
+//        recyclerView.setOnLoadMoreListener(new EndlessRecyclerView.LoadMoreListener() {
+//            @Override
+//            public void onLoadMore() {
+//                deals.add(new Footer());
+//                recyclerView.getAdapter().notifyItemInserted(deals.size() - 1);
+//                getDeals(URL);
+//            }
+//
+//
+//        });
+        hasMore = true;
+
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                if (!hasFooter()) {
+                    //position starts at 0
+                    if (linearLayoutManager.findLastCompletelyVisibleItemPosition() == linearLayoutManager.getItemCount() - 2) {
+                        deals.add(new Footer());
+                        recyclerView.getAdapter().notifyItemInserted(deals.size() - 1);
+                        fromLoadMore = true;
+                        getDeals(URL);
+                    }
+                }
             }
-            VolleyRequest volleyRequest = new VolleyRequest(Request.Method.GET, URL, jsonObject, successListener, errorListener);
-            DesiDimeTestApplication.getInstance().addToRequestQueue(volleyRequest);
+        });
+
+        if(getArguments().get(Constants.ARGS_DEALS_CAT).equals("TOP")){
+            URL = "http://rails4.desidime.com/v1/deals/top.json";
+        }else if(getArguments().get(Constants.ARGS_DEALS_CAT).equals("POPULOR")){
+            URL = "http://rails4.desidime.com/v1/deals/populor.json";
+        }else if(getArguments().get(Constants.ARGS_DEALS_CAT).equals("FEATURED")){
+            URL = "http://rails4.desidime.com/v1/deals/featured.json";
         }
+
+        getDeals(URL);
+
         return view;
+    }
+
+    private boolean hasFooter() {
+
+        return deals.get(deals.size() - 1) instanceof Footer;
+    }
+
+    private void getDeals(String url) {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("per_page", 10);
+            Log.d("PAGE", currentPage+"");
+            jsonObject.put("page", currentPage);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        HashMap<String, String> params = new HashMap<>();
+        params.put("per_page", String.valueOf(10));
+        params.put("page", String.valueOf(currentPage));
+        VolleyRequest volleyRequest = new VolleyRequest(Request.Method.GET, URL, params,  null, successListener, errorListener);
+
+        DesiDimeTestApplication.getInstance().addToRequestQueue(volleyRequest);
     }
 
     private Response.Listener<JSONArray> successListener = new Response.Listener<JSONArray>() {
         @Override
         public void onResponse(JSONArray response) {
-
+            ArrayList<Deal> tempDeals = new ArrayList<>();
             try {
                 Gson gson = new Gson();
                 for(int i=0; i<response.length(); i++){
                     Deal deal = gson.fromJson(response.get(i).toString(), Deal.class);
-                    deals.add(deal);
+                    tempDeals.add(deal);
                 }
+                currentPage++;
                 Log.d("Narendra", response.toString());
-                adapter.notifyDataSetChanged();
+                if(fromLoadMore){
+                    int size = deals.size();
+                    deals.remove(size - 1);//removes footer
+                    deals.addAll(tempDeals);
+                    recyclerView.getAdapter().notifyItemRangeChanged(size - 1, deals.size() - size);
+                    fromLoadMore = false;
+                }else {
+                    deals.addAll(tempDeals);
+                    adapter.notifyDataSetChanged();
+                }
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }
