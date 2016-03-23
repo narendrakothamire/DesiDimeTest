@@ -12,7 +12,6 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.softwares.swamisamarth.desidimetest.Models.Deal;
-import com.softwares.swamisamarth.desidimetest.Models.Item;
 import com.softwares.swamisamarth.desidimetest.R;
 
 import java.util.ArrayList;
@@ -25,11 +24,11 @@ public class AdapterDeals extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     private static final int TYPE_FOOTER = 1;
 
     private final LayoutInflater inflator;
-    private ArrayList<Item> deals;
+    private ArrayList<Deal> deals;
     private Context context;
     private OnItemClickListener onItemClickListener;
 
-    public AdapterDeals(Context context, ArrayList<Item> deals) {
+    public AdapterDeals(Context context, ArrayList<Deal> deals) {
         inflator = LayoutInflater.from(context);
         this.deals = deals;
         this.context = context;
@@ -78,14 +77,14 @@ public class AdapterDeals extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
     @Override
     public int getItemViewType(int position) {
-        return deals.get(position) instanceof Deal ? TYPE_ITEM : TYPE_FOOTER;
+        return deals.get(position) != null ? TYPE_ITEM : TYPE_FOOTER;
     }
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         if (holder instanceof DealsViewHolder) {
             DealsViewHolder DealsViewHolder = (DealsViewHolder) holder;
-            Deal deal = (Deal) deals.get(position);
+            Deal deal = deals.get(position);
             Log.d("Deal", deal.getTitle());
             DealsViewHolder.dealTitle.setText(deal.getTitle());
             if (deal.getImagePath() != null) {

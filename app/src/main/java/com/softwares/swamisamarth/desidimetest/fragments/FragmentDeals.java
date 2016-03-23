@@ -15,20 +15,16 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.google.gson.Gson;
 import com.softwares.swamisamarth.desidimetest.Models.Deal;
-import com.softwares.swamisamarth.desidimetest.Models.Footer;
-import com.softwares.swamisamarth.desidimetest.Models.Item;
 import com.softwares.swamisamarth.desidimetest.Network.VolleyRequest;
 import com.softwares.swamisamarth.desidimetest.R;
 import com.softwares.swamisamarth.desidimetest.adapters.AdapterDeals;
 import com.softwares.swamisamarth.desidimetest.applications.DesiDimeTestApplication;
 import com.softwares.swamisamarth.desidimetest.constants.Constants;
 import com.softwares.swamisamarth.desidimetest.custom.EndlessRecyclerView;
-import com.softwares.swamisamarth.desidimetest.custom.PaginationRecyclerView;
 import com.softwares.swamisamarth.desidimetest.utilities.Utility;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,7 +38,7 @@ public class FragmentDeals extends Fragment {
     private static final String TAG = FragmentDeals.class.getSimpleName();
     private EndlessRecyclerView recyclerView;
     private AdapterDeals adapter;
-    private ArrayList<Item> deals = new ArrayList<>();
+    private ArrayList<Deal> deals = new ArrayList<>();
     private String URL = "http://rails4.desidime.com/v1/deals/top.json";
     private int currentPage = 1;
     private boolean hasMore;
@@ -77,18 +73,6 @@ public class FragmentDeals extends Fragment {
         });
 
 
-//        recyclerView.setOnLoadMoreListener(new EndlessRecyclerView.LoadMoreListener() {
-//            @Override
-//            public void onLoadMore() {
-//                deals.add(new Footer());
-//                recyclerView.getAdapter().notifyItemInserted(deals.size() - 1);
-//                getDeals(URL);
-//            }
-//
-//
-//        });
-        hasMore = true;
-
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
@@ -96,8 +80,8 @@ public class FragmentDeals extends Fragment {
                 if (!hasFooter()) {
                     //position starts at 0
                     if (linearLayoutManager.findLastCompletelyVisibleItemPosition() == linearLayoutManager.getItemCount() - 2) {
-                        deals.add(new Footer());
-                        recyclerView.getAdapter().notifyItemInserted(deals.size() - 1);
+                        deals.add(null);
+                        recyclerView.getAdapter().notifyItemInserted(deals.size() -1);
                         fromLoadMore = true;
                         getDeals(URL);
                     }
@@ -120,7 +104,7 @@ public class FragmentDeals extends Fragment {
 
     private boolean hasFooter() {
 
-        return deals.get(deals.size() - 1) instanceof Footer;
+        return deals.get(deals.size() - 1) == null;
     }
 
     private void getDeals(String url) {
@@ -152,7 +136,7 @@ public class FragmentDeals extends Fragment {
                 if(fromLoadMore){
 
                     int size = deals.size();
-                    deals.remove(size - 1);//removes footer
+                    deals.remove(size-1);//removes footer
                     deals.addAll(tempDeals);
                     recyclerView.getAdapter().notifyItemRangeChanged(size - 1, deals.size() - size);
                     fromLoadMore = false;
