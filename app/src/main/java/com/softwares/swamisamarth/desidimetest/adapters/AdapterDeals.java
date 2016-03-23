@@ -89,7 +89,6 @@ public class AdapterDeals extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             DealsViewHolder.dealTitle.setText(deal.getTitle());
             if (deal.getImagePath() != null) {
                 String url = "http://cdn0.desidime.com" + deal.getImagePath();
-                Log.d("Narendra", position + "  " + url);
                 Glide.with(context).load(url).into(DealsViewHolder.dealImageView);
             }
         }
